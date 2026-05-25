@@ -1,6 +1,12 @@
 import asyncio
 from typing import cast
-from uuid import uuid4
+from langsmith import uuid7
+
+# Monkey-patch: langchain-core uses uuid4() for child run IDs, which triggers
+# a LangSmith warning since run/trace IDs must be UUID v7.
+import langchain_core.callbacks.manager as _langchain_mgr
+
+_langchain_mgr.uuid.uuid4 = uuid7
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
@@ -22,7 +28,7 @@ async def main() -> None:
     }
     result = await agent.ainvoke(
         input=inputs,
-        config=RunnableConfig(configurable={"thread_id": uuid4()}),
+        config=RunnableConfig(configurable={"thread_id": uuid7()}),
     )
     result["messages"][-1].pretty_print()
 
